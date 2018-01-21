@@ -88,15 +88,19 @@ Edit the vms-params.json file. You need to update three parameters: `cycleDownlo
 
 Use the following values for this lab:
 
-* `cycleDownloadUri` = TODO
-* `cycleLicenseSas` = TODO
+* `cycleDownloadUri` = "https://cycleclouddownload.blob.core.windows.net/cyclecloud670"
+* `cycleLicenseSas` = "https://cyclecloudlicense.blob.core.windows.net/mooclicense/license.dat?se=2018-02-16&sp=r&sv=2017-04-17&sr=b&sig=T0wHSHGC5wsI06geur4qagao4OdldMhv9ffiTzZW8fI%3D"
 * `rsaPublicKey` = [Create](https://git-scm.com/book/en/v2/Git-on-the-Server-Generating-Your-SSH-Public-Key) your own keypair
 
 ### 3.2 Create Resource Group
 
-Create a resource group in the region of your choice:
+Create a resource group in the region of your choice. Note that resource group names are unique within a subscription.
 
-    az group create --name "{RESOURCE-GROUP}" --location "{REGION}"
+    az group create --name "{RESOURCE-GROUP}" --location "{REGION}" 
+
+For example, you could use "CycleCloudIntroTraining" as the resource group name and western Europe as the region:
+
+    az group create --name "CycleCloudIntroTraining" --location "West Europe"
 
 ### 3.3 Setup Networking
 
@@ -104,9 +108,16 @@ Build the Virtual Network and subnets. By default the vnet is named **cyclevnet*
 
     az group deployment create --name "vnet_deployment" --resource-group "{RESOURCE-GROUP}" --template-uri https://raw.githubusercontent.com/azurebigcompute/Labs/master/CycleCloud%20Labs/deploy-vnet.json --parameters vnet-params.json
 
+For example:
+    az group deployment create --name "vnet_deployment" --resource-group "CycleCloudIntroTraining" --template-uri https://raw.githubusercontent.com/azurebigcompute/azcycle/master/deploy-vnet.json --parameters vnet-params.json
+
 ### 3.4 Build VMs
 
     az group deployment create --name "vms_deployment" --resource-group "{RESOURCE-GROUP}" --template-uri https://raw.githubusercontent.com/azurebigcompute/Labs/master/CycleCloud%20Labs/deploy-vms.json --parameters vms-params.json
+
+For example: 
+    az group deployment create --name "vms_deployment" --resource-group "CycleCloudIntroTraining" --template-uri https://raw.githubusercontent.com/azurebigcompute/azcycle/master/deploy-vms.json --parameters vms-params.json
+
 
 ## 4. Configure CycleCloud Server
 
@@ -138,6 +149,10 @@ Check the “Set Default” option to make this azure subscription the default. 
 
 For more detailed instructions, see the [installation guide](https://docs.cyclecomputing.com/installation-guide-v6.7.0/configuring_cloud_provider/masetup)
 
+
+## 5. Create a simple HPC cluster (GUI)
+
+Click on "Clusters" in the main menu
 
 
 

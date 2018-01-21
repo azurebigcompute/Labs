@@ -30,6 +30,13 @@
         "description": "Cycle download URI"
       }
     },
+    "cycleLicenseURL": {
+      "maxLength": 256,
+      "type": "securestring",
+      "metadata": {
+        "description": "SAS key to Cycle License blob"
+      }
+    },
     "rsaPublicKey": {
       "type": "string",
       "metadata": {
@@ -52,7 +59,7 @@
     "cycle_subnet": "cycle",
 
     "cycleInstallScript": ["[uri(deployment().properties.templateLink.uri, 'cyclecloud_install.sh')]"],
-    "cycleInstallCommand": "[concat('bash cyclecloud_install.sh ', parameters('cycleDownloadUri'))]",
+    "cycleInstallCommand": "[concat('bash cyclecloud_install.sh ', parameters('cycleDownloadUri'), ' \"', parameters('cycleLicenseURL'), '\"')]",
 
     "networkApiVersion": "2017-06-01",
     "computeApiVersion": "2017-03-30"
