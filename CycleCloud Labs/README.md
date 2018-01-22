@@ -226,7 +226,7 @@ In this example, we'll walk through how to connect using the CycleCloud CLI inst
 
 ### 6.1 Connecting to the CycleCloud VM
 
-For security reasons, the CycleCloud VM is behind a jump box / bastion host. To access CS, we must first log onto the jump box, and then from there ssh onto the CS instance. To do this, we'll add a second host to jump through to the ssh commands. For more information, see [this article](https://blog.scottlowe.org/2015/11/21/using-ssh-bastion-host/).
+For security reasons, the CycleCloud VM is behind a jump box / bastion host. To access CS, we must first log onto the jump box, and then from there ssh onto the CS instance. To do this, we'll add a second host to jump through to the ssh commands. For more information, see [this article](https://wiki.gentoo.org/wiki/SSH_jump_host).
 
 In the Azure portal, retrieve the full DNS name of the admin jump box. You can then SSH on it with the **cycleadmin** user with the SSH key provided during the pre-requisite section. (Note that this is *not* the "cyclecloud.pem" file.) 
 
