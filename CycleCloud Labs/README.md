@@ -295,25 +295,22 @@ Confirm the jobs are in the queue by running the qstat command again:
     [cyclecloud@ip-0A000404 ~]$    
 
 
-### Autoscaling Up & Down
+### 6.5 Autoscaling Up & Down
 
 At this point, no execute nodes have been provisioned, because the cluster is configured to autoscale. The cluster will detect that the job queue has work in it, and will provision compute nodes to execute the jobs. By default, he system will try to provision a core of compute power for every job, although this can be changed easily. Since there are 100 jobs, it will request 100 cores. But the cluster has a scale limit in place, 16 cores in this example, so no more than 16 cores will be provisioned.
 
-![Autoscaling](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20Cluster%20-%20Cluster%20Autoscaling.png)
+![Autoscaling](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20Cluster%20Autoscaling.png)
 
 When the jobs are complete and the nodes are idle, they will scale down as well. 
 
 For a more in-depth discussion of CycleCloud's autoscaling behavior, plugins, and API, see the [admin guide](https://docs.cyclecomputing.com/administrator-guide-v6.7.0/autoscale_api).
 
 
-### Reviewing costs
-![ClusterTermination](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20Cluster%20-%20Termination.png)
-
 ## 7. Terminating the Cluster
 
 When we no longer need the cluster, simple click "Terminate" to shutdown all of the infrastructure. Note that all underlying Azure resources will be cleaned up as part of the cluster termination. The operation may take several minutes.
 
-![ClusterTermination](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20Cluster%20-%20Termination.png)
+![ClusterTermination](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20Cluster%20Termination.png)
 
 
 # End of the Lab
