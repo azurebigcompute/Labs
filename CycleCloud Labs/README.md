@@ -152,8 +152,122 @@ For more detailed instructions, see the [installation guide](https://docs.cyclec
 
 ## 5. Create a simple HPC cluster (GUI)
 
-Click on "Clusters" in the main menu
+Click on "Clusters" in the main menu. This will bring up the list of "cluster types" that are available. These are "easy buttons" for clusters, and expose a limited number of parameters in order to simplify and standarize cluster creation. 
+
+![New Clusters](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20New%20Cluster.png)
+
+Note that these are not the only types of clusters available. CycleCloud ships with a limited number of supported cluster types by default, but others are maintained in a central repository. They can easily be imported into CycleCloud. For more details, see the [CycleCloud Admin Guide](https://docs.cyclecomputing.com/administrator-guide-v6.7.0/template_customization). 
+
+Adding new cluster types and customizing existing cluster types will be covered in a separate lab. 
+
+### Creating a Grid Engine Cluster
+
+[Open Grid Scheduler](http://gridscheduler.sourceforge.net/) (OGS) is the open source version of the Sun Grid Engine job scheduler. To create an HPC cluster that is configured with the OGS scheduler, click on "Grid Engine".
+
+![Grid Engine Cluster](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20New%20Cluster.png)
+
+This will bring up the cluster creation wizard.   
+
+#### General Settings
+
+In general, cluster creation wizards present the mandatory parameters on the first page/tab. Subsequent pages/tabs contain options for advanced customization. For this page, specify the cluster name and the region. The provider and credentials should be set correctly already.
+
+When done, either click directly on "Cluster Software" in the left column, or click on the "Next" button in the lower right corner.
+
+![General Settings](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20New%20GE%20Cluster%20-%20General%20Settings.png)
+
+#### Cluster Software
+
+The Cluster Software tab presents two important parameters:
+1. The "cluster-init" to use to customize the nodes' configurations and installed software stack(s).
+2. The ssh key used to enale direct ssh access to the cluster nodes. 
+
+For this example, we will stick to a standard Grid Engine cluster and the standard ssh key that's created by the ARM script. 
+
+![Cluster Software](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20New%20GE%20Cluster%20-%20Cluster%20Software.png)
+
+#### Compute Backend
+
+The "Compute Backend" tab allows users to: 
+
+    1. customize the type of infrastructure used in the HPC cluster 
+    2. Control the autoscaling behavior of the cluster, which is *enabled by default*. 
+
+![Compute Backend](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20New%20GE%20Cluster%20-%20Compute%20Backend.png)
+
+#### Networking
+
+On this tab, select the "cyclevnet-compute" subnet. This will place the compute infrastructure into the correct vnet created by the ARM template. The other options can be ignored for this cluster.
+
+![Networking](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20New%20GE%20Cluster%20-%20Networking.png)
+
+#### Saving the Cluster
+
+At any point after specifying the cluster name and region, the new cluster can be "saved" 
+
+### Setting a usage/cost alert
+
+![CostAlert](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20New%20Cluster%20-%20Cluster%20Usage%20Alert.png)
+
+## 6. Running jobs on the HPC Cluster
+
+In order to run jobs on the standard Grid Engine cluster, users will need to log onto the clusters "Master" node, where the Grid Engine job queue resides. 
+
+* Click on "connect" to get the connection information. Note: alternatively we could use the CycleCloud CLI to connect. 
+
+* ...is installed in the **cycleserver** VM. This VM is not directly accessible via ssh, for security reasons. Users must connect via an admin jumpbox.
+
+* In the Azure portal, retrieve the full DNS name of the admin jump box. You can then SSH on it with the **cycleadmin** user with the SSH key provided during the pre-requisite section. By specifying a proxy command, you can automatically connect to the CycleCloud instance. Use the following command as written, substituting your jumpbox hostname and private key:
+
+    $ ssh -o ProxyCommand='ssh -W %h:%p cycleadmin@{JUMPBOX PUBLIC HOSTNAME}' cycleadmin@cycleserver -i .ssh/{SSH PRIVATE KEY}
+
+ssh onto the grid engine cluster and test out grid engine
+    qstat
+    qstat -f 
+
+Submit 100 test "hostname" jobs as a smoke test:
+
+    [cluster.user@ip-0A000404 ~]$ qsub -t 1:100 -V -b y -cwd hostname
+    Your job-array 1.1-100:1 ("hostname") has been submitted
 
 
+### Autoscaling Up & Down
+Watch the cluster autoscale up. The job queue now has 100 tasks in it, so CycleCloud will attempt to spin up 100 cores, limited by the cap we set when creating the cluster, to process the tasks.
+
+For a more in-depth discussion of CycleCloud's autoscaling behavior, plugins, and API, see the [admin guide](https://docs.cyclecomputing.com/administrator-guide-v6.7.0/autoscale_api).
 
 
+### Reviewing costs
+![ClusterTermination](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20Cluster%20-%20Termination.png)
+
+## 7. Terminating the Cluster
+
+![ClusterTermination](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20Cluster%20-%20Termination.png)
+
+
+## 8. Setup CycleCloud CLI
+
+The CycleCloud CLI is required for importing custom cluster templates among other operations not covered in this lab.  For convenience, the CLI is installed in the **cycleserver** VM. As mentioned previously, for security reasons the CycleServer (CycleCloud) VM is not directly accessible. Users must connect via an admin jumpbox.
+
+Log into the CycleCloud VM, as described above. Use the following command as written, substituting your jumpbox hostname and private key:
+
+    $ ssh -o ProxyCommand='ssh -W %h:%p cycleadmin@{JUMPBOX PUBLIC HOSTNAME}' cycleadmin@cycleserver -i .ssh/{SSH PRIVATE KEY}
+
+* Once loggede in, initialize the CycleCloud CLI:
+
+    $ cyclecloud initialize
+
+
+# End of the Lab
+## Cleanup Resources
+To clean up the resources allocated during the lab, simply delete the resource group. All resources within that group will be cleaned up as part of removing the group.
+
+    az group delete --name "{RESOURCE-GROUP}" 
+
+Using our examples above:
+    
+    az group delete --name "CycleCloudIntroTraining" 
+
+If desired, the service principal can also be deleted. Remember to use the service principal name used at the beginning of the lab.
+
+    az ad sp delete --name "CycleCloudIntroTraining"
