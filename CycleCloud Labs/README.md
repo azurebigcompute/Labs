@@ -160,7 +160,7 @@ Note that these are not the only types of clusters available. CycleCloud ships w
 
 Adding new cluster types and customizing existing cluster types will be covered in a separate lab. 
 
-### Creating a Grid Engine Cluster
+### 5.1 Creating a Grid Engine Cluster
 
 [Open Grid Scheduler](http://gridscheduler.sourceforge.net/) (OGS) is the open source version of the Sun Grid Engine job scheduler. To create an HPC cluster that is configured with the OGS scheduler, click on "Grid Engine".
 
@@ -184,13 +184,14 @@ The Cluster Software tab presents two important parameters:
 
 For this example, we will stick to a standard Grid Engine cluster and the standard ssh key that's created by the ARM script. 
 
+* Leave all the fields as-is, for both the software and the ssh key.
+
 ![Cluster Software](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20New%20GE%20Cluster%20-%20Cluster%20Software.png)
 
 #### Compute Backend
 
 The "Compute Backend" tab allows users to: 
-
-    1. customize the type of infrastructure used in the HPC cluster 
+    1. Customize the type of infrastructure used in the HPC cluster 
     2. Control the autoscaling behavior of the cluster, which is *enabled by default*. 
 
 ![Compute Backend](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20New%20GE%20Cluster%20-%20Compute%20Backend.png)
@@ -205,34 +206,102 @@ On this tab, select the "cyclevnet-compute" subnet. This will place the compute 
 
 At any point after specifying the cluster name and region, the new cluster can be "saved" 
 
-### Setting a usage/cost alert
+### 5.2 Setting a usage/cost alert
+
+Before starting the cluster, we can set an alert to let us know if the accumulated usage cost has reached some threshold. Create the alert by clicking on "Create new alert" in the cluster's summary window. This will bring up a dialog into
+
+For this example, we've set the alert to $100. Set the recipient to be your email address  
 
 ![CostAlert](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20New%20Cluster%20-%20Cluster%20Usage%20Alert.png)
 
 ## 6. Running jobs on the HPC Cluster
 
-In order to run jobs on the standard Grid Engine cluster, users will need to log onto the clusters "Master" node, where the Grid Engine job queue resides. 
+In order to run jobs on the standard Grid Engine cluster, users need to log onto the cluster's "Master" node, where the Grid Engine job queue resides. 
 
-* Click on "connect" to get the connection information. Note: alternatively we could use the CycleCloud CLI to connect. 
+To connect to that VM, there are two options: 
+1. Connect using the CycleCloud CLI, which is installed on the CycleCloud VM, or
+2. SSH using the private key, "cyclecloud.pem", specified during the cluster creation. 
 
-* ...is installed in the **cycleserver** VM. This VM is not directly accessible via ssh, for security reasons. Users must connect via an admin jumpbox.
+In this example, we'll walk through how to connect using the CycleCloud CLI installed on the CycleCloud VM.
 
-* In the Azure portal, retrieve the full DNS name of the admin jump box. You can then SSH on it with the **cycleadmin** user with the SSH key provided during the pre-requisite section. By specifying a proxy command, you can automatically connect to the CycleCloud instance. Use the following command as written, substituting your jumpbox hostname and private key:
+### 6.1 Connecting to the CycleCloud VM
 
-    $ ssh -o ProxyCommand='ssh -W %h:%p cycleadmin@{JUMPBOX PUBLIC HOSTNAME}' cycleadmin@cycleserver -i .ssh/{SSH PRIVATE KEY}
+For security reasons, the CycleCloud VM is behind a jump box / bastion host. To access CS, we must first log onto the jump box, and then from there ssh onto the CS instance. To do this, we'll add a second host to jump through to the ssh commands. For more information, see [this article](https://blog.scottlowe.org/2015/11/21/using-ssh-bastion-host/).
 
-ssh onto the grid engine cluster and test out grid engine
-    qstat
-    qstat -f 
+In the Azure portal, retrieve the full DNS name of the admin jump box. You can then SSH on it with the **cycleadmin** user with the SSH key provided during the pre-requisite section. (Note that this is *not* the "cyclecloud.pem" file.) 
 
-Submit 100 test "hostname" jobs as a smoke test:
+    $ ssh -J cycleadmin@{JUMPBOX PUBLIC HOSTNAME} cycleadmin@cycleserver -i {SSH PRIVATE KEY}
 
-    [cluster.user@ip-0A000404 ~]$ qsub -t 1:100 -V -b y -cwd hostname
+Here's an example command:
+
+    $ ssh -J cycleadmin@adminjbmpiuvl.westeurope.cloudapp.azure.com cycleadmin@cycleserver -i .ssh/cyclecloud-training.pem
+
+## 6.2 Setup CycleCloud CLI
+
+Once on the CycleCloud VM, we'll need to initialize the CycleCloud CLI. First, change to the root user:
+
+    [cycleadmin@cycleserver ~]$ sudo su -
+
+Then, as the root user, initialize the CycleCloud CLI:
+
+    [root@cycleserver ~]$ cyclecloud initialize
+
+Note: supply the admin username and password specified when creating the initial CycleCloud user account.
+
+### 6.3 Connecting to the Grid Engine Master 
+
+Once the CLI is initialize, we can use it to connect to the master node. In the CycleCloud GUI, click on "connect" to get the connection information. The connection string should be similar to the following, but with your cluster name substituted.
+
+    [root@cycleserver ~]$ cyclecloud connect master -c cc-intro-training
+
+Executing that command should produce:
+
+    Connecting to cyclecloud@13.95.214.81 (instance ID: 1955d153a31f8996c04c9565c1540157) using SSH
+    Last login: Mon Jan 22 16:25:45 2018 from 52.178.78.14
+     __        __  |    ___       __  |    __         __|
+    (___ (__| (___ |_, (__/_     (___ |_, (__) (__(_ (__|
+            |
+    Cluster: cc-intro-training
+    Version: 6.7.0
+    Run List: recipe[cyclecloud], role[sge_master_role], recipe[cluster_init]
+    [cyclecloud@ip-0A000404 ~]$
+
+Now you're logged onto the Grid Engine master node.
+
+### 6.4 Submitting Jobs
+
+Once on the master, check the status of the job queue by running the following commands:
+
+    $ qstat
+    $ qstat -f 
+
+The commands' output will confirm that no jobs are running and no execute nodes are provisioned. 
+
+    queuename                      qtype resv/used/tot. load_avg arch          states
+    ---------------------------------------------------------------------------------
+    all.q@ip-0A000404              BIP   0/0/8          0.46     linux-x64
+
+Execute the following command to submit 100 test "hostname" jobs. This will trigger CycleCloud's autoscale to add instances to the cluster, and CycleClouds automation will ensure they are added correctly and then execute jobs.:
+
+    [cyclecloud@ip-0A000404 ~]$ qsub -t 1:100 -V -b y -cwd hostname
     Your job-array 1.1-100:1 ("hostname") has been submitted
+
+Confirm the jobs are in the queue by running the qstat command again:
+
+    [cyclecloud@ip-0A000404 ~]$ qstat
+    job-ID  prior   name       user         state submit/start at     queue                          slots ja-task-ID
+    -----------------------------------------------------------------------------------------------------------------
+          1 0.56000 hostname   cyclecloud   qw    01/22/2018 16:59:53                                    1 1-100:1
+    [cyclecloud@ip-0A000404 ~]$    
 
 
 ### Autoscaling Up & Down
-Watch the cluster autoscale up. The job queue now has 100 tasks in it, so CycleCloud will attempt to spin up 100 cores, limited by the cap we set when creating the cluster, to process the tasks.
+
+At this point, no execute nodes have been provisioned, because the cluster is configured to autoscale. The cluster will detect that the job queue has work in it, and will provision compute nodes to execute the jobs. By default, he system will try to provision a core of compute power for every job, although this can be changed easily. Since there are 100 jobs, it will request 100 cores. But the cluster has a scale limit in place, 16 cores in this example, so no more than 16 cores will be provisioned.
+
+![Autoscaling](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20Cluster%20-%20Cluster%20Autoscaling.png)
+
+When the jobs are complete and the nodes are idle, they will scale down as well. 
 
 For a more in-depth discussion of CycleCloud's autoscaling behavior, plugins, and API, see the [admin guide](https://docs.cyclecomputing.com/administrator-guide-v6.7.0/autoscale_api).
 
@@ -242,20 +311,9 @@ For a more in-depth discussion of CycleCloud's autoscaling behavior, plugins, an
 
 ## 7. Terminating the Cluster
 
+When we no longer need the cluster, simple click "Terminate" to shutdown all of the infrastructure. Note that all underlying Azure resources will be cleaned up as part of the cluster termination. The operation may take several minutes.
+
 ![ClusterTermination](https://raw.githubusercontent.com/rfutrick/Labs/master/CycleCloud%20Labs/images/CC%20-%20Cluster%20-%20Termination.png)
-
-
-## 8. Setup CycleCloud CLI
-
-The CycleCloud CLI is required for importing custom cluster templates among other operations not covered in this lab.  For convenience, the CLI is installed in the **cycleserver** VM. As mentioned previously, for security reasons the CycleServer (CycleCloud) VM is not directly accessible. Users must connect via an admin jumpbox.
-
-Log into the CycleCloud VM, as described above. Use the following command as written, substituting your jumpbox hostname and private key:
-
-    $ ssh -o ProxyCommand='ssh -W %h:%p cycleadmin@{JUMPBOX PUBLIC HOSTNAME}' cycleadmin@cycleserver -i .ssh/{SSH PRIVATE KEY}
-
-* Once loggede in, initialize the CycleCloud CLI:
-
-    $ cyclecloud initialize
 
 
 # End of the Lab
