@@ -4,8 +4,8 @@
   "parameters": {
     "vnetName": { "value": "cyclevnet" },
     "adminJbIPName": { "value": "adminjb_ip" },
-    "adminjbvmSize": { "value": "Standard_D2" },
-    "cyclevmSize": { "value": "Standard_D2" },
+    "adminjbvmSize": { "value": "Standard_DS2" },
+    "cyclevmSize": { "value": "Standard_DS2" },
     "cycleIPName": { "value": "cycleserver_ip" },
     "cycleDownloadUri": { "value": "https://cycleclouddownload.blob.core.windows.net/cyclecloud670" },
     "cycleLicenseURL": {"value": "https://cyclecloudlicense.blob.core.windows.net/mooclicense/license.dat?se=2018-02-16&sp=r&sv=2017-04-17&sr=b&sig=T0wHSHGC5wsI06geur4qagao4OdldMhv9ffiTzZW8fI%3D"},
