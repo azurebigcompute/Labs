@@ -81,7 +81,11 @@ If you would like to learn more about installing CycleCloud directly, we recomme
 
 Start by cloning the repo or otherwise downloading the files:  
 
-    git clone https://github.com/azurebigcompute/Labs.git
+    git clone https://github.com/azurebigcompute/BigComputeLabs.git
+
+Change the directory to the Cycle Cloud lab:
+ 
+    cd BigComputeLabs/CycleCloud
 
 Three parameters in the vms-params.json file are of particular importance:
 
